@@ -11,6 +11,20 @@ import {
 import { formatCurrency } from './utils';
 import { unstable_noStore as noStore } from 'next/cache';
 
+export async function fetchBiggestInvoice() {
+  noStore();
+
+  try {
+    const data =
+      await sql<Revenue>`SELECT customers.name, invoices.amount, invoices.status FROM invoices JOIN customers ON customers.id = invoices.customer_id WHERE invoices.status = 'pending' ORDER BY invoices.amount DESC LIMIT 2`;
+
+    return data.rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch biggest revenue.');
+  }
+}
+
 export async function fetchRevenue() {
   // Add noStore() here to prevent the response from being cached.
   // This is equivalent to in fetch(..., {cache: 'no-store'}).
