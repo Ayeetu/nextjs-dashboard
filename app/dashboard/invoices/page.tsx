@@ -5,18 +5,26 @@ import { CreateInvoice } from '@/app/ui/invoices/buttons';
 import { lusitana } from '@/app/ui/fonts';
 import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
 import { Suspense } from 'react';
-import { fetchBiggestInvoice } from '@/app/lib/data';
+import { fetchInvoicesPages } from '@/app/lib/data';
 
-export default async function page() {
-  const biggestInvoice = await fetchBiggestInvoice();
+export default async function page({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    page?: number;
+  };
+}) {
+  const query = searchParams?.query || '';
+  const currentPage = searchParams?.page || 1;
 
-  console.log(biggestInvoice);
+  const totalPages = await fetchInvoicesPages(query);
   return (
     <div className="w-full">
       <div className="flex w-full items-center justify-between">
         <h1 className={`${lusitana.className}`}>Invoices</h1>
       </div>
-      <h1>Biggest invoices</h1>
+      {/* <h1>Biggest invoices</h1>
       <div className="flex flex-row items-center">
         {biggestInvoice?.map((invoice) => (
           <div
@@ -28,11 +36,17 @@ export default async function page() {
             <div className="text-green-500">Status: {invoice.status}</div>
           </div>
         ))}
-      </div>
+      </div> */}
       <div className="flex-center mt-4 flex justify-between gap-2 md:mt-8">
         <Search placeholder="Search invoices" />
+        <CreateInvoice />
       </div>
-      <div className="mt-5 flex w-full justify-center"></div>
+      <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
+        <Table query={query} currentPage={currentPage} />
+      </Suspense>
+      <div className="mt-5 flex w-full justify-center">
+        <Pagination totalPages={totalPages} />
+      </div>
     </div>
   );
 }
